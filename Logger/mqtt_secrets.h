@@ -1,0 +1,5 @@
+#pragma once
+
+#define SECRET_MQTT_USERNAME "FxIfJSwPAik7FQEmIwMWKjo"
+#define SECRET_MQTT_CLIENT_ID "FxIfJSwPAik7FQEmIwMWKjo"
+#define SECRET_MQTT_PASSWORD "3a5yoq+uEZ7kg1muEs32Nit4"

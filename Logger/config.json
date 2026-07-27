@@ -1,0 +1,34 @@
+{
+  "device": {
+    "name": "SMRAD-01",
+    "location": "test bench",
+    "hardwareRevision": 1
+  },
+  "wifi": {
+    "ssid": "TamNET_Guest",
+    "password": "BeMyGuest"
+  },
+  "mqtt": {
+    "server": "mqtt3.thingspeak.com",
+    "port": 1883,
+    "clientId": "FxIfJSwPAik7FQEmIwMWKjo",
+    "username": "FxIfJSwPAik7FQEmIwMWKjo",
+    "password": "3a5yoq+uEZ7kg1muEs32Nit4",
+    "channel1": "3389737",
+    "channel2": "3394344",
+    "channel3": "3394347"
+  },
+  "timing": {
+    "sensorPeriodMs": 20000,
+    "mqttSpacingMs": 1200,
+    "timeSyncIntervalMs": 3600000
+  },
+  "sensors": {
+    "bme280": true,
+    "o2": true,
+    "co2": true,
+    "fs3000": true,
+    "mq4": true,
+    "h2s": true
+  }
+}

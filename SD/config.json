@@ -1,0 +1,26 @@
+{
+  "device": {
+    "name": "SMRAD-03 STRONG",
+    "location": "Dan MQTT / modem",
+    "hardwareRevision": 1
+  },
+  "wifi": {
+    "ssid": "STRONG_FA12_2.4GHz",
+    "password": "6S7THuRG77"
+  },
+  "mqtt": {
+    "server": "mqtt3.thingspeak.com",
+    "port": 1883,
+    "clientId": "Jx0uMyYRDCokEC8UGyEdBRQ",
+    "username": "Jx0uMyYRDCokEC8UGyEdBRQ",
+    "password": "vV98a7nxij3Ucm1fsxS8j2Ni",
+    "channel1": "3112132",
+    "channel2": "3431221",
+    "channel3": "3431223"
+  },
+  "timing": {
+    "sensorPeriodMs": 20000,
+    "mqttSpacingMs": 1200,
+    "timeSyncIntervalMs": 3600000
+  }
+}
