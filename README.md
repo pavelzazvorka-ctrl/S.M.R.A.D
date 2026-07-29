@@ -28,7 +28,7 @@ Důvod: Systém je určený pro dlouhodobý provoz a budoucí rozšiřování. P
 ## HW konfigurace
 
 ![smrad](/images/Overview.png)
-![smrad](/images/RS485 cz.png)
+![smrad](/images/RS485cz.png)
 
 Systém používá dvojici ESP32 S3 chipu propojenych linkou RS485.
 Je rozdělen na "horní" (Logger) a "dolní" (Probe) stanici.
@@ -414,5 +414,3 @@ Omezení: Musí platit b·x + c > 0
 #### Neznámý typ kalibrace
 
 Pokud cType obsahuje neznámou hodnotu, kalibrace se neprovede a funkce vrátí původní vstupní hodnotu: y = x
-
-![smrad](/images/Done.png)
