@@ -4,7 +4,7 @@
 
 SMRAD je autonomní vícekanálový environmentální a plynový logger založený na ESP32-S3 a FreeRTOS. Firmware je navržený pro dlouhodobý bezobslužný provoz.
 
-![smrad](/images/gas PoC.png)
+![smrad](/images/GasPoC.png)
 
 ### Hlavní cíle:
 
