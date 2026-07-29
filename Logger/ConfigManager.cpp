@@ -262,7 +262,7 @@ void ConfigManager::copyString(char* dst, size_t dstSize, const char* src)
 
 const CalibrationConfig* ConfigManager::getCalibration(uint32_t inputChannel) const
 {
-    for (int i = 0; i < 24; i++)
+    for (int i = 0; i < 8; i++)
     {
         if (_cfg.calibration[i].cType == 0)
             continue;   // prázdný záznam

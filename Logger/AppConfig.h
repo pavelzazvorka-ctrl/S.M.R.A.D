@@ -13,8 +13,8 @@
 // WIFI CONFIGURATION
 // =============================================================
 
-#define WIFI_SSID       "TamNET_Guest"
-#define WIFI_PASS       "BeMyGuest"
+#define WIFI_SSID       "STRONG_FA12_2.4GHz"
+#define WIFI_PASS       "6S7THuRG77"
 
 // =============================================================
 // MQTT / THINGSPEAK CONFIGURATION
@@ -27,9 +27,9 @@
 // THINGSPEAK CHANNELS
 // =============================================================
 
-#define CHANNEL_ID_1    "3389737"
-#define CHANNEL_ID_2    "3394344"
-#define CHANNEL_ID_3    "3394347"
+#define CHANNEL_ID_1    "3112132"
+#define CHANNEL_ID_2    "3431221"
+#define CHANNEL_ID_3    "3431223"
 
 // =============================================================
 // RGB STATUS LED
@@ -53,6 +53,14 @@
 
 #define SDA_PIN         16 //8
 #define SCL_PIN         17 // 9
+
+// =============================================================
+// RS485
+// =============================================================
+
+#define RS485_RX_PIN   15
+#define RS485_TX_PIN   18
+#define RS485_BAUD     115200
 
 // =============================================================
 // ENVIRONMENTAL REFERENCE VALUES
@@ -177,8 +185,8 @@
 //
 // =============================================================
 
-#define POWER_VIN_PIN       A0 // A2
-#define POWER_BAT_PIN       A0 // A3
+#define POWER_VIN_PIN       A2
+#define POWER_BAT_PIN       A3
 
 #define POWER_VIN_RTOP      100000.0f
 #define POWER_VIN_RBOTTOM   22000.0f

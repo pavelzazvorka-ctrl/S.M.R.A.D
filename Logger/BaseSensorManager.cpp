@@ -119,7 +119,7 @@ float BaseSensorManager::getEpochMinutes()
 void BaseSensorManager::addLocalSlotData(SensorPacket &packet, int slot, float value)
 {
     setField(packet, slot, value, true);
-    Log.printf("SNS Temp #%lu read", value);
+    Log.printf("SNS %.2f -> %lu ", value, slot);
 }
 
 void BaseSensorManager::addLocalData(SensorPacket &packet)

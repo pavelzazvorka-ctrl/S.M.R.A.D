@@ -47,10 +47,6 @@ TaskHealth networkHealth = { "networkTask",   0, NETWORK_TASK_TIMEOUT_MS };
 TaskHealth ledHealth     = { "heartbeatTask", 0, LED_TASK_TIMEOUT_MS     };
 TaskHealth sdHealth      = { "sdTask",        0, SD_TASK_TIMEOUT_MS      };
 
-#define RS485_RX_PIN   10
-#define RS485_TX_PIN   9
-#define RS485_BAUD     115200
-
 HardwareSerial rs485Uart(1);
 Rs485PacketReceiver rs485(rs485Uart, RS485_RX_PIN, RS485_TX_PIN, RS485_BAUD);
 
@@ -64,10 +60,10 @@ void convertToSensorPacket(const SmradPacket &in, SensorPacket &out)
         out.f[i] = NAN;
         out.valid[i] = false;
     }
-
+    
     out.sequence = in.sequence;
     out.timestampMs = millis();
-
+    
     uint8_t count = min((uint8_t)FIELD_COUNT, in.fieldCount);
 
     for (uint8_t i = 0; i < count; i++)
@@ -75,7 +71,7 @@ void convertToSensorPacket(const SmradPacket &in, SensorPacket &out)
         out.f[i] = in.values[i];
         out.valid[i] = smradPacketFieldValid(in, i);
     }
-    
+        
     // Calibration
     for (uint8_t i = 0; i < count; i++)
     {
@@ -84,8 +80,9 @@ void convertToSensorPacket(const SmradPacket &in, SensorPacket &out)
         if (cal)
         {
             float value = calibrate(in.values[i],cal);
+
             Log.printf(
-                "CAL Calibration found: in=%lu -> out=%lu type=%lu %f.3 -> %f.3",
+                "CAL Calibration found: in=%lu -> out=%lu type=%lu %.3f -> %.3f",
                 cal->cIn,
                 cal->cOut,
                 cal->cType, in.values[i], value); 
@@ -150,7 +147,9 @@ void sensorTask(void *pv)
             Sensors.addLocalData(packet); // extra data
             
             RtcTemperature temp = rtc.GetTemperature();
-            Sensors.addLocalSlotData(packet,19,temp.AsFloatDegC()); // extra data
+            float t = temp.AsFloatDegC();
+            Log.printf("RTC temp = %.2f", t);
+            Sensors.addLocalSlotData(packet,19,t); // extra data
 
             if (packetQueue)
                 xQueueOverwrite(packetQueue, &packet);
@@ -421,7 +420,7 @@ void setup()
     Log.begin(Serial, 115200);
 
     Log.printf("----------------------------------------------------------------------");
-    Log.printf("Subsurface Multi-gas Respiration and Anomaly Detector 0.21 Base-logger");
+    Log.printf("Subsurface Multi-gas Respiration and Anomaly Detector 0.22 Base-logger");
     Log.printf("----------------------------------------------------------------------");
 
     Wire.begin(SDA_PIN, SCL_PIN);
