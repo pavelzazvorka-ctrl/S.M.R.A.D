@@ -1,5 +1,7 @@
 # Subsurface Multi-gas Respiration \& Anomaly Detector
 
+![smrad](/images/smrad.png)
+
 SMRAD je autonomní vícekanálový environmentální a plynový logger založený na ESP32-S3 a FreeRTOS. Firmware je navržený pro dlouhodobý bezobslužný provoz.
 
 ### Hlavní cíle:
@@ -22,6 +24,9 @@ SMRAD je autonomní vícekanálový environmentální a plynový logger založen
 Důvod: Systém je určený pro dlouhodobý provoz a budoucí rozšiřování. Předvídatelné chování systému je důležitější než maximální výkon.
 
 ## HW konfigurace
+
+![smrad](/images/Overview.png)
+![smrad](/images/RS485cz.png)
 
 Systém používá dvojici ESP32 S3 chipu propojenych linkou RS485.
 Je rozdělen na "horní" (Logger) a "dolní" (Probe) stanici.
@@ -292,6 +297,8 @@ cela aplikace se restartuje.
     Partition scheme Default 4MB with spifs
     PSRAM: OPI PSRAM
     Flash Size 4M (32M)
+
+![smrad](/images/Testing.png)
 
 ## Kalibrace
 
