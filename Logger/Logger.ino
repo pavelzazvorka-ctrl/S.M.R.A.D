@@ -149,7 +149,7 @@ void sensorTask(void *pv)
             RtcTemperature temp = rtc.GetTemperature();
             float t = temp.AsFloatDegC();
             Log.printf("RTC temp = %.2f", t);
-            Sensors.addLocalSlotData(packet,19,t); // extra data
+            Sensors.addLocalSlotData(packet,20,t); // extra data
 
             if (packetQueue)
                 xQueueOverwrite(packetQueue, &packet);
