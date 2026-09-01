@@ -296,8 +296,8 @@ void SensorManager::read(SensorPacket &packet)
     // 16	Čas. značka	ESP (RTC)						Unix time (float)
     // 17	Probe Uin	ESP Ain	V	V		0	4095	Ain
     // 18	U_check		ESP Ain	V	V		0	5	    U na pom. zdroji 3,3V (přítomnost 230V)
-    // 21	U bat		ESP Ain	V	V		0	20	    U na baterii (zbytek kapacity), U dělič
-    // 22	Teplota		RTC			°C		
+    // 19	U bat		ESP Ain	V	V		0	20	    U na baterii (zbytek kapacity), U dělič
+    // 20	Teplota		RTC			°C		
 
     if (_status.power)
     {
@@ -307,7 +307,7 @@ void SensorManager::read(SensorPacket &packet)
 
         if (vinReading.valid)
         {
-            setField(packet, 16, vinReading.filteredRaw,vinReading.valid && isGoodNumber(vinReading.filteredRaw));
+            setField(packet, 17, vinReading.filteredRaw,vinReading.valid && isGoodNumber(vinReading.filteredRaw));
         }
     }
     Log.printf("Packet #%lu read", packet.sequence);

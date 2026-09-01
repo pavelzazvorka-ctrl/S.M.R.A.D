@@ -268,7 +268,7 @@ Kanal 3 povazujeme za servisni ..krome attr 17 doplni vse Logger
 | 16	| Čas. značka	  | RTC	    		      |  min		   | 0   	| 	     | float (24 bit) minut od zacatku UNIX epochy          | 
 | 17  | Napeti zdroje | Probe A2		      |  raw		   | 0	  | 4096	 | napeti zdroje probe  BAT                             | 
 | 18  | Napeti zdroje | Logger A2		      |  raw		   | 0	  | 4096	 | napeti zdroje logger AC                              | 
-| 19  | Napeti zdroje | Logger A2		      |  raw		   | 0	  | 4096	 | napeti zdroje logger BAT                             | 
+| 19  | Napeti zdroje | Logger A3		      |  raw		   | 0	  | 4096	 | napeti zdroje logger BAT                             | 
 | 20	| Temperature	  | RTC   			      |  °C		     | -40	| 85	   | RTC.readTemperature                                  | 
 
 ## Organizace kódu a struktura
