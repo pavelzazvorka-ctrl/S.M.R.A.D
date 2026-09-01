@@ -124,11 +124,11 @@ void BaseSensorManager::addLocalSlotData(SensorPacket &packet, int slot, float v
 
 void BaseSensorManager::addLocalData(SensorPacket &packet)
 {
-    // 15	Čas. značka	ESP (RTC)						Unix time (float)
-    // 16	Probe Uin	ESP Ain	V	V		0	4095	Ain
-    // 17	U_check		ESP Ain	V	V		0	5	    U na pom. zdroji 3,3V (přítomnost 230V)
-    // 18	U bat		ESP Ain	V	V		0	20	    U na baterii (zbytek kapacity), U dělič
-    // 19	Teplota		RTC			°C		
+    // 16	Čas. značka	ESP (RTC)						Unix time (float)
+    // 17	Probe Uin	ESP Ain	V	V		0	4095	Ain
+    // 18	U_check		ESP Ain	V	V		0	5	    U na pom. zdroji 3,3V (přítomnost 230V)
+    // 19	U bat		ESP Ain	V	V		0	20	    U na baterii (zbytek kapacity), U dělič
+    // 20	Teplota		RTC			°C		
 
     // =========================================================
     // POWER
@@ -151,14 +151,14 @@ void BaseSensorManager::addLocalData(SensorPacket &packet)
     }
 
     // Power
-    setField(packet, 17, vinReading.filteredVoltage,
+    setField(packet, 18, vinReading.filteredVoltage,
          vinReading.valid && isGoodNumber(vinReading.filteredVoltage));
 
-    setField(packet, 18, batReading.filteredVoltage,
+    setField(packet, 19, batReading.filteredVoltage,
          batReading.valid && isGoodNumber(batReading.filteredVoltage));
  
     // time stamp ( minutes since epoch)
-    setField(packet, 15, getEpochMinutes(), true);
+    setField(packet, 16, getEpochMinutes(), true);
 
     Log.printf("SNS Packet #%lu add local values", packet.sequence);
 }
