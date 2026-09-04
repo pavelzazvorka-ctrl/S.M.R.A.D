@@ -15,6 +15,8 @@
 
 #define WIFI_SSID       "STRONG_FA12_2.4GHz"
 #define WIFI_PASS       "6S7THuRG77"
+//#define WIFI_SSID       "TamNET_Guest"
+//#define WIFI_PASS       "BeMyGuest"
 
 // =============================================================
 // MQTT / THINGSPEAK CONFIGURATION
@@ -51,7 +53,7 @@
 // I2C BUS CONFIGURATION
 // =============================================================
 
-#define SDA_PIN         16 //8
+#define SDA_PIN         16 // 8
 #define SCL_PIN         17 // 9
 
 // =============================================================

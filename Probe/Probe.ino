@@ -84,7 +84,7 @@ void setup()
     
     Log.begin(Serial, 115200);
     Log.printf("------------------------------------------------------------------");
-    Log.printf("Subsurface Multi-gas Respiration and Anomaly Detector 0.21 - PROBE");
+    Log.printf("Subsurface Multi-gas Respiration and Anomaly Detector 0.23 - PROBE");
     Log.printf("------------------------------------------------------------------");
 
     Wire.begin(SDA_PIN, SCL_PIN);
