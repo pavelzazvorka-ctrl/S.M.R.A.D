@@ -387,5 +387,5 @@ void SensorManager::logSelfTest()
     Log.printf("MQ4:      %s", _status.mq4 ? "OK" : "FAIL");
     Log.printf("H2S:      %s", _status.h2s ? "OK" : "FAIL");
     Log.printf("POWER:    %s", _status.power ? "OK" : "FAIL");
-    Log.printf("============================");
+    Log.printf("============================");    
 }

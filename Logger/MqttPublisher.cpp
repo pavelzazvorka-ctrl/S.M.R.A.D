@@ -421,6 +421,10 @@ bool MqttPublisher::publishPacket(const SensorPacket &packet)
             Log.printf("MQTT publish failed topic %d", channel + 1);
             allOk = false;
         }
+        else
+        {
+            // LED signal OK 
+        }
 
         if (channel < channelCount - 1)
             vTaskDelay(pdMS_TO_TICKS(Config.get().timing.mqttSpacingMs));
