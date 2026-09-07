@@ -182,9 +182,11 @@ void networkTask(void *pv)
         if (Mqtt.connected())
         {
             if (packetQueue && xQueueReceive(packetQueue, &packet, pdMS_TO_TICKS(100)))
-            {
+            {                    
                 if (Mqtt.publishPacket(packet))
-                    StatusLed.showSentBlink();
+                {
+                    // all good
+                }
             }
         }
 
@@ -203,7 +205,8 @@ void heartbeatTask(void *pv)
 
     for (;;)
     {
-        StatusLed.update(Wifi.connected(), Mqtt.connected());
+        bool sentOk = (millis()-Mqtt.lastPublishOkMs())<3000; // mqtt sent OK in last three seconds
+        StatusLed.update(Wifi.connected(), Mqtt.connected(),SdLog.available(),sentOk);
 
         Watchdog.markAlive(ledHealth);
         vTaskDelay(pdMS_TO_TICKS(500));
@@ -420,7 +423,7 @@ void setup()
     Log.begin(Serial, 115200);
 
     Log.printf("----------------------------------------------------------------------");
-    Log.printf("Subsurface Multi-gas Respiration and Anomaly Detector 0.23 Base-logger");
+    Log.printf("Subsurface Multi-gas Respiration and Anomaly Detector 0.24 Base-logger");
     Log.printf("----------------------------------------------------------------------");
 
     Wire.begin(SDA_PIN, SCL_PIN);
