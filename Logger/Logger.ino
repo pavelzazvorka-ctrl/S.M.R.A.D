@@ -423,7 +423,7 @@ void setup()
     Log.begin(Serial, 115200);
 
     Log.printf("----------------------------------------------------------------------");
-    Log.printf("Subsurface Multi-gas Respiration and Anomaly Detector 0.24 Base-logger");
+    Log.printf("Subsurface Multi-gas Respiration and Anomaly Detector 0.25 Base-logger");
     Log.printf("----------------------------------------------------------------------");
 
     Wire.begin(SDA_PIN, SCL_PIN);

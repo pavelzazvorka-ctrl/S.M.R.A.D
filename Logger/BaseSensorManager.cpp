@@ -144,12 +144,14 @@ void BaseSensorManager::addLocalData(SensorPacket &packet)
     vinReading.valid = false;
     batReading.valid = false;
 
-    if (_status.power)
-    {
-        vinReading = _powerVin.read();
-        batReading = _powerBat.read();
-    }
+    vinReading = _powerVin.read();
+    batReading = _powerBat.read();
 
+    // time stamp ( minutes since epoch)
+    setField(packet, 16, getEpochMinutes(), true);
+
+    // 17 is Probe A2 in original packet
+    
     // Power
     setField(packet, 18, vinReading.filteredVoltage,
          vinReading.valid && isGoodNumber(vinReading.filteredVoltage));
@@ -157,9 +159,6 @@ void BaseSensorManager::addLocalData(SensorPacket &packet)
     setField(packet, 19, batReading.filteredVoltage,
          batReading.valid && isGoodNumber(batReading.filteredVoltage));
  
-    // time stamp ( minutes since epoch)
-    setField(packet, 16, getEpochMinutes(), true);
-
     Log.printf("SNS Packet #%lu add local values", packet.sequence);
 }
 
