@@ -58,6 +58,32 @@ Probe PINS
 + RS485_RX_PIN   4
 + RS485_TX_PIN   5
 
+## Význam LED
+
+### Logger
+LED na Loggeru bliká každých 500 ms. Pokud je vše v pořádku, bliká bíle. Při odeslání dat na MQTT blikne zeleně.
+
+|Vyznam|Barva|
+| --------- | ------ |
+|Data SENT	|🟢 Green|
+|OK	|⚪ White|
+|Wi-Fi error	|🔵 Blue|
+|MQTT error	|🟣 Magenta|
+|SD error	|🟡 Yellow|
+|ERROR	|🔴 Red|
+
+### Probe
+LED na Probe standardně bliká bíle. Při odeslání dat přes RS485 blikne zeleně. Při startu LED signalizuje stav a přítomnost jednotlivých senzorů: Počet bílých bliknutí určuje typ senzoru. Následuje zelené nebo červené bliknutí, které signalizuje stav senzoru.
+
+|pocet bliknuti | sensor|
+| ---- | ---- |
+|1|bme|
+|2|co2|
+|3|fs3000|
+|4|h2s|
+|5|mq4|
+|6|o2|
+
 ## SW
 
 Firmware používá FreeRTOS task architekturu.
