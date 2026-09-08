@@ -60,7 +60,7 @@ void BaseSensorManager::begin()
     }
 
     // Initialize individual sensor groups.
-    //_status.power   = initPowerTelemetry();
+    _status.power   = initPowerTelemetry();
     
     Log.printf("SNS Base sensors init done");
 }
@@ -136,7 +136,7 @@ void BaseSensorManager::addLocalData(SensorPacket &packet)
 
 
     uint32_t nowMs = millis();
-    uint32_t _lastValidRS485Ms = nowMs;
+    _lastValidRS485Ms = nowMs;
 
     AnalogMeasure::Reading vinReading;
     AnalogMeasure::Reading batReading;
