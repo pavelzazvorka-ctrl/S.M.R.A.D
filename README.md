@@ -145,6 +145,8 @@ LED se aktualizuje každých 500 ms.
 
 Probe standardně bliká bíle; po odeslání RS485 paketu signalizuje aktivitu zeleně. Při startu proběhne self-test senzorů: počet bílých bliknutí určuje senzor, následná zelená/červená jeho stav.
 
+Probe standardně bliká bíle; po odeslání RS485 paketu signalizuje aktivitu zeleně. Při startu proběhne self-test senzorů: počet bílých bliknutí určuje senzor, následná zelená/červená jeho stav.
+
 | Počet bliknutí | Senzor |
 | ---: | --- |
 | 1 | BME280 |
@@ -153,6 +155,259 @@ Probe standardně bliká bíle; po odeslání RS485 paketu signalizuje aktivitu 
 | 4 | H2S |
 | 5 | MQ4 |
 | 6 | O2 |
+
+## Jak se v projektu zorientovat
+
+S.M.R.A.D. se skládá ze tří samostatných firmware projektů:
+
+- **Probe** – spodní měřicí jednotka. Čte fyzické senzory, sestaví datový paket a odešle jej po RS485.
+- **Logger** – horní jednotka. Přijímá data z Probe, doplňuje vlastní údaje, aplikuje kalibrace, ukládá data na SD kartu a odesílá je přes MQTT.
+- **Monitor** – jednoduchý servisní firmware určený především pro diagnostiku RS485 komunikace.
+
+Část kódu společná pro více firmware je uložena ve složce **shared**.
+
+### Doporučené pořadí pro čtení zdrojového kódu
+
+Pokud projekt vidíte poprvé, doporučujeme postupovat v tomto pořadí:
+
+1. `Probe/Probe.ino` – hlavní program měřicí jednotky.
+2. `Probe/SensorManager.cpp` – zde je definováno, jak se čtou senzory a do kterých polí se ukládají naměřené hodnoty.
+3. `shared/SensorPacket.h` – interní reprezentace naměřených dat.
+4. `shared/SmradPacket.h` – formát paketu přenášeného po RS485.
+5. `shared/Rs485PacketSender.cpp` – odesílání paketu z Probe.
+6. `Logger/Logger.ino` – hlavní tok programu Loggeru a FreeRTOS tasky.
+7. `shared/Rs485PacketReceiver.cpp` – příjem a kontrola RS485 paketů.
+8. `Logger/ConfigManager.cpp` – načtení konfigurace a kalibrace z SD karty.
+9. `Logger/MqttPublisher.cpp` – převod dat do ThingSpeak/MQTT kanálů.
+10. `Logger/SdLogger.cpp` – zápis měření a událostí na SD kartu.
+11. `Logger/WatchdogManager.cpp` – diagnostika a recovery mechanismy.
+
+## Datový tok
+
+Základní cesta jednoho měření je:
+
+          fyzické senzory
+               ↓
+        Probe/SensorManager
+               ↓
+          SensorPacket
+               ↓
+           SmradPacket
+               ↓
+             RS485
+              :::
+             RS485
+               ↓
+     Logger/Rs485PacketReceiver
+               ↓
+          SensorPacket
+               ↓
+           kalibrace
+               ↓
+     lokální data Loggeru
+               ↓
+       ┌───────┴────────┐
+       ↓                ↓
+    SD karta          MQTT
+    data.csv        ThingSpeak
+
+Probe je jediná část systému, která přímo čte hlavní měřicí senzory. Logger pracuje primárně s již přijatým paketem a doplňuje data, která jsou lokální pro Logger.
+
+## Struktura adresářů
+
+### `Probe/`
+
+Firmware spodní měřicí jednotky.
+
+- `Probe.ino` – inicializace Probe, hlavní měřicí smyčka, RS485 odesílání a watchdog.
+- `SensorManager.cpp/.h` – inicializace a čtení jednotlivých senzorů a mapování hodnot do `SensorPacket`.
+- `ExplorIR_CO2.cpp/.h` – komunikace s CO2 senzorem ExplorIR přes UART.
+- `ProbeStatus.h` – stav dostupnosti jednotlivých senzorů.
+- `AppConfig.h` – piny, periody měření a další compile-time nastavení Probe.
+
+### `Logger/`
+
+Firmware horní jednotky.
+
+- `Logger.ino` – hlavní aplikace a vytvoření FreeRTOS tasků.
+- `BaseSensorManager.cpp/.h` – lokální měření Loggeru a doplňování servisních polí.
+- `ConfigManager.cpp/.h` – načítání `config.json` a `calibration.json`.
+- `Calibration.cpp/.h` – matematické kalibrační funkce.
+- `WifiManager.cpp/.h` – připojení a recovery Wi-Fi.
+- `MqttPublisher.cpp/.h` – MQTT připojení a publikování jednotlivých kanálů.
+- `SdLogger.cpp/.h` – `data.csv`, `events.log` a recovery SD karty.
+- `TimeSync.cpp/.h` – NTP synchronizace systémového času.
+- `LedStatus.cpp/.h` – stavová RGB LED.
+- `WatchdogManager.cpp/.h` – dohled nad tasky, konektivitou a stavem systému.
+- `AppConfig.h` – compile-time výchozí nastavení Loggeru.
+
+### `shared/`
+
+Kód používaný více firmware projekty.
+
+- `SensorPacket.h` – interní datová struktura obsahující až 24 hodnot a jejich validity.
+- `SmradPacket.h` – binární formát RS485 protokolu.
+- `Rs485PacketSender.*` – odesílání RS485 paketů.
+- `Rs485PacketReceiver.*` – příjem paketů, kontrola hlavičky a CRC.
+- `Crc16.h` – CRC16 kontrola paketů.
+- `AnalogMeasure.*` – pomocná třída pro ADC měření, průměrování a EMA filtraci.
+- `DebugLog.*` – společné debug/monitor výpisy.
+
+Soubory stejného jména ve složkách `Logger`, `Probe` a `Monitor` jsou v řadě případů pouze **forwardery**. Skutečná implementace je ve `shared/`. Při opravě společného kódu proto nejprve ověřte, zda neupravujete pouze forwarder.
+
+### `Monitor/`
+
+Minimální diagnostický firmware pro příjem a zobrazení RS485 paketů bez celé logiky Loggeru.
+
+Je vhodný zejména při hledání problémů mezi Probe a Loggerem.
+
+### `SD/`
+
+Příklady obsahu SD karty:
+
+- `config.json` – runtime konfigurace Loggeru,
+- `calibration.json` – kalibrační pravidla,
+- `data.csv` – ukázka naměřených dat,
+- `events.log` – ukázka systémového logu.
+
+Tyto soubory slouží jako příklady provozní struktury SD karty a neměly by obsahovat produkční hesla nebo jiné tajné přístupové údaje.
+
+## SW
+
+Probe i Logger používají `setField()` s last-known-good stabilizací. Pokud aktuální čtení krátkodobě selže a existuje předchozí dobrá hodnota, může být poslední dobrá hodnota znovu použita.
+
+Současná implementace **nemá časový limit stáří last-good hodnoty**. Je to vědomě ponechané současné chování; při interpretaci dat je potřeba s tím počítat. Pokud bude v budoucnu požadováno rozlišit dlouhodobý výpadek konkrétního senzoru, vhodným rozšířením je timestamp a maximální stáří cache.
+
+Kanal 3 povazujeme za servisni ..krome attr 17 doplni vse Logger
+
+| No.	| Parametr      | Zdroj             | Jednotka   | Min  | Max    | Pozn.                                                |   
+| --- | --------------| ----------------- | ---------- | ---- | ------ | ---------------------------------------------------- | 
+| 16	| Čas. značka	  | RTC	    	      |  min		   | 0   	| 	     | float (24 bit) minut od zacatku UNIX epochy          | 
+| 17  | Napeti zdroje | Probe A2	      |  raw		   | 0	  | 4096	 | napeti zdroje probe  BAT                             | 
+| 18  | Napeti zdroje | Logger A2	      |  raw		   | 0	  | 4096	 | napeti zdroje logger AC                              | 
+| 19  | Napeti zdroje | Logger A3	      |  raw		   | 0	  | 4096	 | napeti zdroje logger BAT                             | 
+| 20	| Temperature	  | RTC   		      |  °C		     | -40	| 85	   | RTC.readTemperature                                  | 
+
+## Jak přidat nový senzor
+
+Při přidávání nového senzoru je potřeba rozlišovat mezi fyzickým senzorem a telemetrickým polem.
+
+### 1. Inicializace senzoru
+
+Inicializace hlavních měřicích senzorů patří do `Probe/SensorManager`.
+
+Stav inicializace uložte do `ProbeStatus`, aby bylo možné rozlišit mezi:
+
+- senzorem, který není přítomen,
+- senzorem, který se nepodařilo inicializovat,
+- senzorem, který je dostupný, ale aktuální měření je nevalidní.
+
+### 2. Čtení hodnoty
+
+Naměřenou hodnotu zapisujte v `SensorManager::read()` pomocí:
+
+    setField(packet, index, value, valid);
+
+Každá veličina musí mít jednoznačně přidělený index 0–23.
+
+Před použitím nového indexu zkontrolujte tabulku „Měřené hodnoty“ v tomto README.
+
+### 3. Validita hodnoty
+
+Hodnota musí být označena jako validní pouze tehdy, pokud senzor poskytl použitelné měření.
+
+Samotná existence číselné hodnoty není totéž jako validní měření.
+
+### 4. Přenos přes RS485
+
+`SensorPacket` je v Probe převeden na `SmradPacket`. `SmradPacket` obsahuje hodnoty a bitovou masku jejich validity.
+
+Paket je chráněn CRC16.
+
+Při změně formátu RS485 protokolu je nutné zvážit zvýšení `SMRAD_PACKET_VERSION`, protože Probe, Logger a Monitor musí používat kompatibilní strukturu paketu.
+
+### 5. Logger
+
+Pole 0–7 jsou primárně data z Probe.
+
+Pole 8–15 jsou určena pro kalibrované hodnoty.
+
+Pole 16–23 jsou servisní a lokální hodnoty systému.
+
+Před změnou tohoto rozdělení zkontrolujte:
+
+- `SensorManager.cpp`
+- `BaseSensorManager.cpp`
+- `Calibration.cpp`
+- `MqttPublisher.cpp`
+- `SdLogger.cpp`
+- tabulku měřených hodnot v README
+
+### 6. MQTT / ThingSpeak
+
+Každých osm položek `SensorPacket` tvoří jeden ThingSpeak kanál:
+
+    0–7   → channel1 / field1–field8
+    8–15  → channel2 / field1–field8
+    16–23 → channel3 / field1–field8
+
+Změna indexu veličiny tedy může změnit nejen RS485 paket, ale také cílový MQTT kanál a ThingSpeak field.
+
+Po každé změně mapování aktualizujte tabulku měřených hodnot v README.
+
+## Quick start pro vývojáře
+
+1. Nahrajte Probe firmware z Probe/Probe.ino.
+2. Nahrajte Logger firmware z Logger/Logger.ino.
+3. Pro diagnostiku RS485 lze místo Loggeru použít Monitor/Monitor.ino.
+4. Připravte SD kartu s /config.json a /calibration.json.
+5. Nastavte WiFi a MQTT credentials.
+6. Otevřete Serial Monitor na 115200 baud.
+7. Po startu ověřte self-test Probe a následně příjem RS485 paketů na Loggeru.
+
+## Potřebné Arduino knihovny
+
+ArduinoJson
+PubSubClient
+Adafruit BME280
+Adafruit Unified Sensor
+Adafruit NeoPixel
+SparkFun FS3000
+Rtc by Makuna / RtcDS3231
+WiFi
+SD/SPI
+
+## Organizace kódu a struktura
+
+Kód ma slozky:
+
++ Logger - horní stanice
++ Monitor - testovaci firmware pro monitorovani dat na seriovou linku
++ Probe - spodni stanice
++ Shared - sdílený kod
+
+Aplikace jsou napsany v CPP na ESP32S3 RTOS. Jsou rozdeleny do Tasku a
+kazdy task hlida watchdog. Kdyz se task neprihlasi do definovane doby,
+cela aplikace se restartuje.
+
+## Nastavení prostředí Logger/Probe
+
+    board ESP32S3 Dev module
+    Upload 921600
+    USB Mode. Hardware CDC and JTAG
+    USB CDC on boot: Enabled
+    USB Firmware MSC on boot: Disabled
+    USB DFU on boot: Disabled
+    CPU frequency 240 MHz
+    Flash mode QIO 80 MHz
+    Partition scheme Default 4MB with spifs
+    PSRAM: OPI PSRAM
+    Flash Size 4M (32M)
+
+![smrad](/images/Testing.png)
+
+## FreeRTOS tasky Loggeru
+
 
 ## FreeRTOS tasky Loggeru
 
@@ -297,7 +552,140 @@ Pole 8–15 jsou standardně vyhrazena pro výsledky kalibrace polí 0–7. Form
 
 Probe i Logger používají `setField()` s last-known-good stabilizací. Pokud aktuální čtení krátkodobě selže a existuje předchozí dobrá hodnota, může být poslední dobrá hodnota znovu použita.
 
+Probe i Logger používají `setField()` s last-known-good stabilizací. Pokud aktuální čtení krátkodobě selže a existuje předchozí dobrá hodnota, může být poslední dobrá hodnota znovu použita.
+
 Současná implementace **nemá časový limit stáří last-good hodnoty**. Je to vědomě ponechané současné chování; při interpretaci dat je potřeba s tím počítat. Pokud bude v budoucnu požadováno rozlišit dlouhodobý výpadek konkrétního senzoru, vhodným rozšířením je timestamp a maximální stáří cache.
+
+Kanal 3 povazujeme za servisni ..krome attr 17 doplni vse Logger
+
+| No.	| Parametr      | Zdroj             | Jednotka   | Min  | Max    | Pozn.                                                |   
+| --- | --------------| ----------------- | ---------- | ---- | ------ | ---------------------------------------------------- | 
+| 16	| Čas. značka	  | RTC	    	      |  min		   | 0   	| 	     | float (24 bit) minut od zacatku UNIX epochy          | 
+| 17  | Napeti zdroje | Probe A2	      |  raw		   | 0	  | 4096	 | napeti zdroje probe  BAT                             | 
+| 18  | Napeti zdroje | Logger A2	      |  raw		   | 0	  | 4096	 | napeti zdroje logger AC                              | 
+| 19  | Napeti zdroje | Logger A3	      |  raw		   | 0	  | 4096	 | napeti zdroje logger BAT                             | 
+| 20	| Temperature	  | RTC   		      |  °C		     | -40	| 85	   | RTC.readTemperature                                  | 
+
+## Jak přidat nový senzor
+
+Při přidávání nového senzoru je potřeba rozlišovat mezi fyzickým senzorem a telemetrickým polem.
+
+### 1. Inicializace senzoru
+
+Inicializace hlavních měřicích senzorů patří do `Probe/SensorManager`.
+
+Stav inicializace uložte do `ProbeStatus`, aby bylo možné rozlišit mezi:
+
+- senzorem, který není přítomen,
+- senzorem, který se nepodařilo inicializovat,
+- senzorem, který je dostupný, ale aktuální měření je nevalidní.
+
+### 2. Čtení hodnoty
+
+Naměřenou hodnotu zapisujte v `SensorManager::read()` pomocí:
+
+    setField(packet, index, value, valid);
+
+Každá veličina musí mít jednoznačně přidělený index 0–23.
+
+Před použitím nového indexu zkontrolujte tabulku „Měřené hodnoty“ v tomto README.
+
+### 3. Validita hodnoty
+
+Hodnota musí být označena jako validní pouze tehdy, pokud senzor poskytl použitelné měření.
+
+Samotná existence číselné hodnoty není totéž jako validní měření.
+
+### 4. Přenos přes RS485
+
+`SensorPacket` je v Probe převeden na `SmradPacket`. `SmradPacket` obsahuje hodnoty a bitovou masku jejich validity.
+
+Paket je chráněn CRC16.
+
+Při změně formátu RS485 protokolu je nutné zvážit zvýšení `SMRAD_PACKET_VERSION`, protože Probe, Logger a Monitor musí používat kompatibilní strukturu paketu.
+
+### 5. Logger
+
+Pole 0–7 jsou primárně data z Probe.
+
+Pole 8–15 jsou určena pro kalibrované hodnoty.
+
+Pole 16–23 jsou servisní a lokální hodnoty systému.
+
+Před změnou tohoto rozdělení zkontrolujte:
+
+- `SensorManager.cpp`
+- `BaseSensorManager.cpp`
+- `Calibration.cpp`
+- `MqttPublisher.cpp`
+- `SdLogger.cpp`
+- tabulku měřených hodnot v README
+
+### 6. MQTT / ThingSpeak
+
+Každých osm položek `SensorPacket` tvoří jeden ThingSpeak kanál:
+
+    0–7   → channel1 / field1–field8
+    8–15  → channel2 / field1–field8
+    16–23 → channel3 / field1–field8
+
+Změna indexu veličiny tedy může změnit nejen RS485 paket, ale také cílový MQTT kanál a ThingSpeak field.
+
+Po každé změně mapování aktualizujte tabulku měřených hodnot v README.
+
+## Quick start pro vývojáře
+
+1. Nahrajte Probe firmware z Probe/Probe.ino.
+2. Nahrajte Logger firmware z Logger/Logger.ino.
+3. Pro diagnostiku RS485 lze místo Loggeru použít Monitor/Monitor.ino.
+4. Připravte SD kartu s /config.json a /calibration.json.
+5. Nastavte WiFi a MQTT credentials.
+6. Otevřete Serial Monitor na 115200 baud.
+7. Po startu ověřte self-test Probe a následně příjem RS485 paketů na Loggeru.
+
+## Potřebné Arduino knihovny
+
+ArduinoJson
+PubSubClient
+Adafruit BME280
+Adafruit Unified Sensor
+Adafruit NeoPixel
+SparkFun FS3000
+Rtc by Makuna / RtcDS3231
+WiFi
+SD/SPI
+
+## Organizace kódu a struktura
+
+Kód ma slozky:
+
++ Logger - horní stanice
++ Monitor - testovaci firmware pro monitorovani dat na seriovou linku
++ Probe - spodni stanice
++ Shared - sdílený kod
+
+Aplikace jsou napsany v CPP na ESP32S3 RTOS. Jsou rozdeleny do Tasku a
+kazdy task hlida watchdog. Kdyz se task neprihlasi do definovane doby,
+cela aplikace se restartuje.
+
+## Nastavení prostředí Logger/Probe
+
+    board ESP32S3 Dev module
+    Upload 921600
+    USB Mode. Hardware CDC and JTAG
+    USB CDC on boot: Enabled
+    USB Firmware MSC on boot: Disabled
+    USB DFU on boot: Disabled
+    CPU frequency 240 MHz
+    Flash mode QIO 80 MHz
+    Partition scheme Default 4MB with spifs
+    PSRAM: OPI PSRAM
+    Flash Size 4M (32M)
+
+![smrad](/images/Testing.png)
+
+## Kalibrace
+
 
 ## Kalibrace
 
@@ -341,6 +729,9 @@ lowerLimit <= x <= upperLimit
 Mimo rozsah současná implementace vrací `0.0`. Pokud jsou oba limity stejné, kontrola rozsahu se nepoužije.
 
 ### Typ 1 – Polynomial
+
+Používá polynom až šestého řádu.
+y = g + a·x + b·x² + c·x³ + d·x⁴ + e·x⁵ + f·x⁶
 
 ```text
 y = g + a*x + b*x^2 + c*x^3 + d*x^4 + e*x^5 + f*x^6
