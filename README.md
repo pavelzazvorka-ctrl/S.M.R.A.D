@@ -717,6 +717,28 @@ MQTT Tx topic 2: field1=27.260&field2=97.498&field3=39.421&field4=&field5=&field
 MQTT Tx topic 3: field1=29814348.000&field2=242.594&field3=2.488&field4=2.461&field5=26.000&field6=&field7=&field8=
 ```
 
+### Logger monitor output
+
+Pro zjednoduseni kalibrace je mozne prekompilovat Logger firmware v nastaveni
+
+#### AppConfig.h:
+```
+#define SERIAL_DEBUG 0
+#define SERIAL_MONITOR 1
+```
+
+.. pak budou na vystupu RS232 ( UBS-C kabel ) jen namerena data
+
+```
+27.879999;97.399109;37.876953;nan;nan;nan;238.301010;194.063965;27.879999;97.399109;37.876953;nan;nan;nan;238.301010;194.063965;nan;222.627319;nan;nan;nan;nan;nan;nan
+27.940001;97.396515;36.976562;nan;nan;nan;235.640808;198.251175;27.940001;97.396515;36.976562;nan;nan;nan;235.640808;198.251175;nan;221.933228;nan;nan;nan;nan;nan;nan
+27.959999;97.396950;36.849609;nan;nan;nan;235.312653;201.400940;27.959999;97.396950;36.849609;nan;nan;nan;235.312653;201.400940;nan;221.193253;nan;nan;nan;nan;nan;nan
+27.930000;97.397820;36.789062;nan;nan;nan;235.650116;203.920761;27.930000;97.397820;36.789062;nan;nan;nan;235.650116;203.920761;nan;219.964264;nan;nan;nan;nan;nan;nan
+27.920000;97.398560;36.612305;nan;nan;nan;234.520096;206.936615;27.920000;97.398560;36.612305;nan;nan;nan;234.520096;206.936615;nan;218.919632;nan;nan;nan;nan;nan;nan
+27.920000;97.397873;36.541016;nan;nan;nan;232.416077;209.149307;27.920000;97.397873;36.541016;nan;nan;nan;232.416077;209.149307;nan;219.231689;nan;nan;nan;nan;nan;nan
+27.959999;97.400169;36.438477;nan;nan;nan;232.732864;209.319443;27.959999;97.400169;36.438477;nan;nan;nan;232.732864;209.319443;nan;221.146942;nan;nan;nan;nan;nan;nan
+```
+
 ### Probe debug output
 ```
 ------------------------------------------------------------------
