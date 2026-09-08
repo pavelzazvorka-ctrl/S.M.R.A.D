@@ -254,6 +254,14 @@ bool Rs485PacketReceiver::receive(SmradPacket &packet, uint32_t timeoutMs)
         }
     }
 
+    // An idle line between periodic packets is normal. Count a timeout
+    // only if a frame had already started but did not finish in time.
+    if (_state != WAIT_MAGIC1)
+    {
+        _timeoutErrors++;
+        resetParser();
+    }
+
     return false;
 }
 

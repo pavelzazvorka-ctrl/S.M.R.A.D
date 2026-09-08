@@ -2,8 +2,6 @@
 
 #include "SmradPacket.h"
 #include "Rs485PacketReceiver.h"
-
-#include <Arduino.h>
 #include <Wire.h>
 #include <WiFi.h>
 
@@ -87,10 +85,11 @@ void convertToSensorPacket(const SmradPacket &in, SensorPacket &out)
                 cal->cOut,
                 cal->cType, in.values[i], value); 
 
-            if (cal->cOut < FIELD_COUNT)                
+            if (cal->cOut < FIELD_COUNT)
             {
-                out.f[cal->cOut] = value;   
-                out.valid[cal->cOut] =  smradPacketFieldValid(in, i);                
+                out.f[cal->cOut] = value;
+                out.valid[cal->cOut] =
+                    smradPacketFieldValid(in, i) && isGoodNumber(value);
             }
         }        
     }
@@ -113,6 +112,7 @@ void sensorTask(void *pv)
 
         if (rs485.receive(in, 250))
         {
+            Sensors.markRs485Valid();
             convertToSensorPacket(in, packet);
 
             // Calibration - monitor CSV
@@ -154,7 +154,7 @@ void sensorTask(void *pv)
             RtcTemperature temp = rtc.GetTemperature();
             float t = temp.AsFloatDegC();
             Log.printf("RTC temp = %.2f", t);
-            Sensors.addLocalSlotData(packet,20,t); // extra data
+            Sensors.addLocalSlotData(packet, FIELD_RTC_TEMPERATURE, t); // extra data
 
             if (packetQueue)
                 xQueueOverwrite(packetQueue, &packet);
@@ -162,9 +162,11 @@ void sensorTask(void *pv)
             if (sdQueue)
                 xQueueSend(sdQueue, &packet, 0);
 
-            Watchdog.markAlive(sensorHealth);
+        }
 
-        }        
+        // Task heartbeat means the task itself is running.
+        // RS485 data freshness is supervised independently.
+        Watchdog.markAlive(sensorHealth);
         vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
@@ -178,25 +180,34 @@ void networkTask(void *pv)
     (void)pv;
 
     SensorPacket packet;
+    uint32_t lastPublishCycleMs = millis();
+    const uint32_t networkServicePeriodMs = 250UL;
 
     for (;;)
     {
+        // Keep WiFi and MQTT state machines responsive even though
+        // telemetry publishing intentionally remains much slower.
         Wifi.tick();
         Mqtt.tick();
 
-        if (Mqtt.connected())
+        uint32_t nowMs = millis();
+        uint32_t publishPeriodMs = Config.get().timing.sensorPeriodMs;
+
+        if (Mqtt.connected() &&
+            (nowMs - lastPublishCycleMs >= publishPeriodMs))
         {
-            if (packetQueue && xQueueReceive(packetQueue, &packet, pdMS_TO_TICKS(100)))
-            {                    
-                if (Mqtt.publishPacket(packet))
-                {
-                    // all good
-                }
+            lastPublishCycleMs = nowMs;
+
+            // packetQueue has length 1 and is overwritten by sensorTask,
+            // therefore this always publishes the most recent packet.
+            if (packetQueue && xQueueReceive(packetQueue, &packet, 0))
+            {
+                Mqtt.publishPacket(packet);
             }
         }
 
         Watchdog.markAlive(networkHealth);
-        vTaskDelay(pdMS_TO_TICKS(Config.get().timing.sensorPeriodMs));
+        vTaskDelay(pdMS_TO_TICKS(networkServicePeriodMs));
     }
 }
 
@@ -428,7 +439,7 @@ void setup()
     Log.begin(Serial, 115200);
 
     Log.printf("----------------------------------------------------------------------");
-    Log.printf("Subsurface Multi-gas Respiration and Anomaly Detector 0.26 Base-logger");
+    Log.printf("Subsurface Multi-gas Respiration and Anomaly Detector 1.00 Base-logger");
     Log.printf("----------------------------------------------------------------------");
 
     Wire.begin(SDA_PIN, SCL_PIN);

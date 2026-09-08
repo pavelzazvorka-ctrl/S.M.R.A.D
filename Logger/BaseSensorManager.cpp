@@ -135,9 +135,6 @@ void BaseSensorManager::addLocalData(SensorPacket &packet)
     // =========================================================
 
 
-    uint32_t nowMs = millis();
-    _lastValidRS485Ms = nowMs;
-
     AnalogMeasure::Reading vinReading;
     AnalogMeasure::Reading batReading;
 
@@ -148,15 +145,15 @@ void BaseSensorManager::addLocalData(SensorPacket &packet)
     batReading = _powerBat.read();
 
     // time stamp ( minutes since epoch)
-    setField(packet, 16, getEpochMinutes(), true);
+    setField(packet, FIELD_TIMESTAMP_MIN, getEpochMinutes(), true);
 
     // 17 is Probe A2 in original packet
     
     // Power
-    setField(packet, 18, vinReading.filteredVoltage,
+    setField(packet, FIELD_LOGGER_AC, vinReading.filteredVoltage,
          vinReading.valid && isGoodNumber(vinReading.filteredVoltage));
 
-    setField(packet, 19, batReading.filteredVoltage,
+    setField(packet, FIELD_LOGGER_BAT, batReading.filteredVoltage,
          batReading.valid && isGoodNumber(batReading.filteredVoltage));
  
     Log.printf("SNS Packet #%lu add local values", packet.sequence);
@@ -265,6 +262,13 @@ float BaseSensorManager::keepLastGoodValue(
         return _lastGood[index];
 
     return NAN;
+}
+
+
+void BaseSensorManager::markRs485Valid()
+{
+    _status.rs485 = true;
+    _lastValidRS485Ms = millis();
 }
 
 uint32_t BaseSensorManager::lastValidRS485Ms() const
