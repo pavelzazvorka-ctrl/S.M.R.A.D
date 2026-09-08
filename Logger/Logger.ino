@@ -86,7 +86,12 @@ void convertToSensorPacket(const SmradPacket &in, SensorPacket &out)
                 cal->cIn,
                 cal->cOut,
                 cal->cType, in.values[i], value); 
-            out.f[cal->cOut] = value;                      
+
+            if (cal->cOut < FIELD_COUNT)                
+            {
+                out.f[cal->cOut] = value;   
+                out.valid[cal->cOut] =  smradPacketFieldValid(in, i);                
+            }
         }        
     }
 }
@@ -423,7 +428,7 @@ void setup()
     Log.begin(Serial, 115200);
 
     Log.printf("----------------------------------------------------------------------");
-    Log.printf("Subsurface Multi-gas Respiration and Anomaly Detector 0.25 Base-logger");
+    Log.printf("Subsurface Multi-gas Respiration and Anomaly Detector 0.26 Base-logger");
     Log.printf("----------------------------------------------------------------------");
 
     Wire.begin(SDA_PIN, SCL_PIN);

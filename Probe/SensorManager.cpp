@@ -279,7 +279,7 @@ void SensorManager::read(SensorPacket &packet)
 
         if (h2sReading.valid)
         {
-            setField(packet, 6, h2sReading.filteredRaw,h2sReading.valid && isGoodNumber(h2sReading.filteredRaw));
+            setField(packet, 7, h2sReading.filteredRaw,h2sReading.valid && isGoodNumber(h2sReading.filteredRaw));
         }
     }
     // ========================================================================================
