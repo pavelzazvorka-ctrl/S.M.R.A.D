@@ -236,6 +236,7 @@ private:
         int &len,
         int fieldNumber,
         float value,
+        bool valid,
         bool addAmpersand
     );
 

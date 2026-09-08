@@ -36,6 +36,7 @@ public:
 
     BaseStatus& status();
 
+    void markRs485Valid();
     uint32_t lastValidRS485Ms() const;
     bool initPowerTelemetry();
 
@@ -75,8 +76,8 @@ private:
 
     BaseStatus _status =
     {
-        false, // power
         false, // rs485
+        false, // power
         false  // sd
     };
 
