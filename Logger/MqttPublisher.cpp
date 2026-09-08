@@ -265,6 +265,7 @@ bool MqttPublisher::appendField(
     int &len,
     int fieldNumber,
     float value,
+    bool valid,
     bool addAmpersand
 )
 {
@@ -276,7 +277,7 @@ bool MqttPublisher::appendField(
 
     int written = 0;
 
-    if (isGoodNumber(value))
+    if (valid && isGoodNumber(value))
     {
         written = snprintf(
             payload + len,
@@ -402,6 +403,7 @@ bool MqttPublisher::publishPacket(const SensorPacket &packet)
                     len,
                     fieldNumber,
                     packet.f[i],
+                    packet.valid[i],
                     addAmpersand
                 ))
             {
@@ -420,6 +422,10 @@ bool MqttPublisher::publishPacket(const SensorPacket &packet)
         {
             Log.printf("MQTT publish failed topic %d", channel + 1);
             allOk = false;
+        }
+        else
+        {
+            // LED signal OK 
         }
 
         if (channel < channelCount - 1)

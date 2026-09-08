@@ -78,13 +78,15 @@ struct CalibrationConfig
     float g;
 };
 
+constexpr size_t CALIBRATION_COUNT = 8;
+
 struct RuntimeConfig
 {
     DeviceConfig device;
     WifiConfig wifi;
     MqttConfig mqtt;
     TimingConfig timing;
-    CalibrationConfig calibration[8];
+    CalibrationConfig calibration[CALIBRATION_COUNT];
 };
 
 class ConfigManager
@@ -99,6 +101,8 @@ public:
 private:
     void loadDefaults();
     bool loadFromSd();
+    bool loadCalibrationFromSd();
+    bool validateCalibration(const CalibrationConfig &cal, size_t index) const;
     void copyString(char* dst, size_t dstSize, const char* src);
 
     RuntimeConfig _cfg;

@@ -83,7 +83,7 @@ void LedStatus::begin()
 
 void LedStatus::showSentBlink()
 {
-    _sentBlinkUntilMs = millis() + 150UL;
+    _sentBlinkUntilMs = millis() + 200UL;
 }
 
 // =============================================================
@@ -138,15 +138,19 @@ void LedStatus::showSentBlink()
 //
 // =============================================================
 
-void LedStatus::update(bool wifiOk, bool mqttOk)
+void LedStatus::update(bool wifiOk, bool mqttOk, bool sdOk, bool sent)
 {
     _blink = !_blink;
 
     LedState state = LED_OFF;
 
-    if (millis() < _sentBlinkUntilMs)
+    if ( !wifiOk && !mqttOk && !sent)
     {
-        state = LED_SENT;
+        state = _blink ? LED_ERROR : LED_OFF;
+    }
+    else if (!sdOk)
+    {
+        state = _blink ? LED_SD : LED_OFF;
     }
     else if (!wifiOk)
     {
@@ -158,7 +162,16 @@ void LedStatus::update(bool wifiOk, bool mqttOk)
     }
     else
     {
-        state = _blink ? LED_OK : LED_OFF;
+        // all good 
+        if (sent) // && (millis() < _sentBlinkUntilMs))
+        {
+            state = _blink ? LED_SENT : LED_OFF;
+        }
+        else
+        {
+            state = _blink ? LED_OK : LED_OFF;
+        }
+
     }
 
     if (state == _lastState)
@@ -220,27 +233,32 @@ void LedStatus::setRaw(LedState state)
 {
     switch (state)
     {
-        case LED_OK:
-            _rgb.setPixelColor(0, _rgb.Color(50, 0, 0));
+        // GRB not RGB :-)
+        case LED_OK:  // White
+            _rgb.setPixelColor(0, _rgb.Color(50, 50, 50));
             break;
 
-        case LED_WIFI:
+        case LED_WIFI: // Blue
             _rgb.setPixelColor(0, _rgb.Color(0, 0, 50));
             break;
 
-        case LED_MQTT:
+        case LED_MQTT: // Magenta
             _rgb.setPixelColor(0, _rgb.Color(35, 50, 0));
             break;
 
-        case LED_SENT:
+        case LED_SD:   // Yellow
             _rgb.setPixelColor(0, _rgb.Color(50, 0, 50));
             break;
 
-        case LED_ERROR:
+        case LED_SENT: // Green
+            _rgb.setPixelColor(0, _rgb.Color(50, 0, 00));
+            break;
+
+        case LED_ERROR: // Red
             _rgb.setPixelColor(0, _rgb.Color(0, 50, 0));
             break;
 
-        default:
+        default:        // Off
             _rgb.setPixelColor(0, 0);
             break;
     }

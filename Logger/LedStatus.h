@@ -87,6 +87,9 @@ enum LedState
     // WiFi + MQTT connected
     LED_OK,
 
+    // SD disconnected
+    LED_SD,
+
     // WiFi disconnected
     LED_WIFI,
 
@@ -176,7 +179,7 @@ public:
     //
     // =========================================================
 
-    void update(bool wifiOk, bool mqttOk);
+    void update(bool wifiOk, bool mqttOk, bool sdOk, bool sentOk);
 
 private:
 

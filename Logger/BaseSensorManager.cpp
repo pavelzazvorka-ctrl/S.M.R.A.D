@@ -60,7 +60,7 @@ void BaseSensorManager::begin()
     }
 
     // Initialize individual sensor groups.
-    //_status.power   = initPowerTelemetry();
+    _status.power   = initPowerTelemetry();
     
     Log.printf("SNS Base sensors init done");
 }
@@ -124,19 +124,16 @@ void BaseSensorManager::addLocalSlotData(SensorPacket &packet, int slot, float v
 
 void BaseSensorManager::addLocalData(SensorPacket &packet)
 {
-    // 15	Čas. značka	ESP (RTC)						Unix time (float)
-    // 16	Probe Uin	ESP Ain	V	V		0	4095	Ain
-    // 17	U_check		ESP Ain	V	V		0	5	    U na pom. zdroji 3,3V (přítomnost 230V)
-    // 18	U bat		ESP Ain	V	V		0	20	    U na baterii (zbytek kapacity), U dělič
-    // 19	Teplota		RTC			°C		
+    // 16	Čas. značka	ESP (RTC)						Unix time (float)
+    // 17	Probe Uin	ESP Ain	V	V		0	4095	Ain
+    // 18	U_check		ESP Ain	V	V		0	5	    U na pom. zdroji 3,3V (přítomnost 230V)
+    // 19	U bat		ESP Ain	V	V		0	20	    U na baterii (zbytek kapacity), U dělič
+    // 20	Teplota		RTC			°C		
 
     // =========================================================
     // POWER
     // =========================================================
 
-
-    uint32_t nowMs = millis();
-    uint32_t _lastValidRS485Ms = nowMs;
 
     AnalogMeasure::Reading vinReading;
     AnalogMeasure::Reading batReading;
@@ -144,22 +141,21 @@ void BaseSensorManager::addLocalData(SensorPacket &packet)
     vinReading.valid = false;
     batReading.valid = false;
 
-    if (_status.power)
-    {
-        vinReading = _powerVin.read();
-        batReading = _powerBat.read();
-    }
+    vinReading = _powerVin.read();
+    batReading = _powerBat.read();
 
+    // time stamp ( minutes since epoch)
+    setField(packet, FIELD_TIMESTAMP_MIN, getEpochMinutes(), true);
+
+    // 17 is Probe A2 in original packet
+    
     // Power
-    setField(packet, 17, vinReading.filteredVoltage,
+    setField(packet, FIELD_LOGGER_AC, vinReading.filteredVoltage,
          vinReading.valid && isGoodNumber(vinReading.filteredVoltage));
 
-    setField(packet, 18, batReading.filteredVoltage,
+    setField(packet, FIELD_LOGGER_BAT, batReading.filteredVoltage,
          batReading.valid && isGoodNumber(batReading.filteredVoltage));
  
-    // time stamp ( minutes since epoch)
-    setField(packet, 15, getEpochMinutes(), true);
-
     Log.printf("SNS Packet #%lu add local values", packet.sequence);
 }
 
@@ -266,6 +262,13 @@ float BaseSensorManager::keepLastGoodValue(
         return _lastGood[index];
 
     return NAN;
+}
+
+
+void BaseSensorManager::markRs485Valid()
+{
+    _status.rs485 = true;
+    _lastValidRS485Ms = millis();
 }
 
 uint32_t BaseSensorManager::lastValidRS485Ms() const

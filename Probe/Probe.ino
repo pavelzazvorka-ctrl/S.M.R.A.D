@@ -77,6 +77,34 @@ void fillRs485Packet(SmradPacket &out, const SensorPacket &in)
         smradPacketSetField(out, i, in.f[i], in.valid[i]);
 }
 
+void BlinkStatus(int nn, bool status)
+{
+    for(int i=0; i<nn; i++)
+    {
+        // GRB not RGB :-)
+        rgb.setPixelColor(0, rgb.Color(100, 100, 100));
+        rgb.show();
+        delay(200);
+        rgb.setPixelColor(0, rgb.Color(0, 0, 0));        
+        rgb.show();
+        delay(200);
+    }
+
+    if (status)
+    {
+        rgb.setPixelColor(0, rgb.Color(0, 255, 0));
+    }
+    else
+    {
+        rgb.setPixelColor(0, rgb.Color(255, 0, 0));
+    }
+    rgb.show();        
+    delay(400);
+    rgb.setPixelColor(0, rgb.Color(0, 0, 0));
+    rgb.show();
+    delay(200);
+}
+
 void setup()
 {
     Serial.begin(115200);
@@ -84,7 +112,7 @@ void setup()
     
     Log.begin(Serial, 115200);
     Log.printf("------------------------------------------------------------------");
-    Log.printf("Subsurface Multi-gas Respiration and Anomaly Detector 0.21 - PROBE");
+    Log.printf("Subsurface Multi-gas Respiration and Anomaly Detector 1.00 - PROBE");
     Log.printf("------------------------------------------------------------------");
 
     Wire.begin(SDA_PIN, SCL_PIN);
@@ -96,6 +124,13 @@ void setup()
 
     Sensors.begin();
     Sensors.logSelfTest();
+
+    BlinkStatus(1,Sensors.status().bme);
+    BlinkStatus(2,Sensors.status().co2);
+    BlinkStatus(3,Sensors.status().fs3000);
+    BlinkStatus(4,Sensors.status().h2s);
+    BlinkStatus(5,Sensors.status().mq4);
+    BlinkStatus(6,Sensors.status().o2);
 
     rs485.begin();
     
@@ -137,7 +172,7 @@ void loop()
 
         rgb.setPixelColor(0, rgb.Color(50, 0, 0));
         rgb.show();
-        delay(100);
+        delay(200);
         rgb.setPixelColor(0, 0);
         rgb.show();
     }

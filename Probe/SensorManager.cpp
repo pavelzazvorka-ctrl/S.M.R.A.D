@@ -190,7 +190,7 @@ void SensorManager::initAnalogSensors()
     _mq4.setVoltageDivider(10000, 20000);
     _status.mq4 = true;
 
-    // Methan
+    // H2S
     _h2s.begin();
     _h2s.setSamples(21);
     _h2s.setEmaAlpha(0.2f);
@@ -217,9 +217,9 @@ void SensorManager::read(SensorPacket &packet)
     // 0	Temperature	    BME280			    °C		  -40	85	   bme.readTemperature
     // 1	Pressure	    BME280			    kPa		   30	110	   bme.readPressure / 1000
     // 2	Rel. humidity	BME280			    %		    0	100	   bme.readHumidity
-    // 3	Airflow vel.	FS3000-1015		    count		0	4000   raw airflow (později kal. rovnice 1)
-    // 4	Oxygen		    DFRobot SEN0465		% vol		0	21	   o2.readGasConcentrationPPM / 10000
-    // 5	CO2		        ExplorIR-M-E-100	% vol		0	100	   co2Reading.percent
+    // 3	Airflow vel.	FS3000-1015		    m/s		0	15	   fs.readMetersPerSecond()
+    // 4	Oxygen		    DFRobot SEN0465		ppm		0	-	   o2.readGasConcentrationPPM (raw library value)
+    // 5	CO2		        ExplorIR-M-E-100	ppm		0	100000 co2Reading.ppm
     // 6	Methane		    MQ-4			    % vol		0	4095   MQ4 raw_filtered (kalibrace na % vol dodatečně)
     // 7	H2S		        DFRobot SEN0568		ppm vol		0	4095   h2s raw_filtered (kalibrace na ppm vol. dodatečně)
 
@@ -229,21 +229,21 @@ void SensorManager::read(SensorPacket &packet)
         float pressureKpa  = _bme.readPressure() / 1000.0f;
         float humidity     = _bme.readHumidity();
 
-        setField(packet, 0, temp,        isGoodNumber(temp));
-        setField(packet, 1, pressureKpa, isGoodNumber(pressureKpa));
-        setField(packet, 2, humidity,    isGoodNumber(humidity));
+        setField(packet, FIELD_TEMPERATURE, temp,        isGoodNumber(temp));
+        setField(packet, FIELD_PRESSURE, pressureKpa, isGoodNumber(pressureKpa));
+        setField(packet, FIELD_HUMIDITY, humidity,    isGoodNumber(humidity));
     }
 
     if (_status.fs3000)
     {
         float airflow = _fs.readMetersPerSecond();
-        setField(packet, 3, airflow, isGoodNumber(airflow));
+        setField(packet, FIELD_AIRFLOW, airflow, isGoodNumber(airflow));
     }
 
     if (_status.o2)
     {
         float o2Ppm = _o2.readGasConcentrationPPM();
-        setField(packet, 4, o2Ppm,  isGoodNumber(o2Ppm));
+        setField(packet, FIELD_O2_RAW, o2Ppm, isGoodNumber(o2Ppm));
     }
 
     if (_status.co2)
@@ -255,7 +255,7 @@ void SensorManager::read(SensorPacket &packet)
         if (co2Reading.valid)
         {
             _lastValidCo2Ms = millis(); 
-            setField(packet, 5, co2Reading.ppm, co2Reading.valid && isGoodNumber(co2Reading.ppm));
+            setField(packet, FIELD_CO2_RAW, co2Reading.ppm, co2Reading.valid && isGoodNumber(co2Reading.ppm));
         }
     }
 
@@ -267,7 +267,7 @@ void SensorManager::read(SensorPacket &packet)
 
         if (mq4Reading.valid)
         {
-            setField(packet, 6, mq4Reading.filteredRaw,mq4Reading.valid && isGoodNumber(mq4Reading.filteredRaw));
+            setField(packet, FIELD_METHANE_RAW, mq4Reading.filteredRaw, mq4Reading.valid && isGoodNumber(mq4Reading.filteredRaw));
         }
     }
 
@@ -279,11 +279,11 @@ void SensorManager::read(SensorPacket &packet)
 
         if (h2sReading.valid)
         {
-            setField(packet, 6, h2sReading.filteredRaw,h2sReading.valid && isGoodNumber(h2sReading.filteredRaw));
+            setField(packet, FIELD_H2S_RAW, h2sReading.filteredRaw, h2sReading.valid && isGoodNumber(h2sReading.filteredRaw));
         }
     }
     // ========================================================================================
-    // CHANNEL 1 
+    // CHANNEL 2
     // ========================================================================================
 
     // reserved for calibrated data
@@ -296,8 +296,8 @@ void SensorManager::read(SensorPacket &packet)
     // 16	Čas. značka	ESP (RTC)						Unix time (float)
     // 17	Probe Uin	ESP Ain	V	V		0	4095	Ain
     // 18	U_check		ESP Ain	V	V		0	5	    U na pom. zdroji 3,3V (přítomnost 230V)
-    // 21	U bat		ESP Ain	V	V		0	20	    U na baterii (zbytek kapacity), U dělič
-    // 22	Teplota		RTC			°C		
+    // 19	U bat		ESP Ain	V	V		0	20	    U na baterii (zbytek kapacity), U dělič
+    // 20	Teplota		RTC			°C		
 
     if (_status.power)
     {
@@ -307,7 +307,7 @@ void SensorManager::read(SensorPacket &packet)
 
         if (vinReading.valid)
         {
-            setField(packet, 16, vinReading.filteredRaw,vinReading.valid && isGoodNumber(vinReading.filteredRaw));
+            setField(packet, FIELD_PROBE_POWER, vinReading.filteredRaw, vinReading.valid && isGoodNumber(vinReading.filteredRaw));
         }
     }
     Log.printf("Packet #%lu read", packet.sequence);
@@ -387,5 +387,5 @@ void SensorManager::logSelfTest()
     Log.printf("MQ4:      %s", _status.mq4 ? "OK" : "FAIL");
     Log.printf("H2S:      %s", _status.h2s ? "OK" : "FAIL");
     Log.printf("POWER:    %s", _status.power ? "OK" : "FAIL");
-    Log.printf("============================");
+    Log.printf("============================");    
 }

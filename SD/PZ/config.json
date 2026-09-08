@@ -1,0 +1,26 @@
+{
+  "device": {
+    "name": "SMRAD-PZ develop",
+    "location": "PZ MQTT / TamNET",
+    "hardwareRevision": 2
+  },
+  "wifi": {
+    "ssid": "TamNET_Guest",
+    "password": "BeMyGuest"
+  },
+  "mqtt": {
+    "server": "mqtt3.thingspeak.com",
+    "port": 1883,
+    "clientId": "FxIfJSwPAik7FQEmIwMWKjo",
+    "username": "FxIfJSwPAik7FQEmIwMWKjo",
+    "password": "VRMnNmD7YbvQzzrCZzaKoK5k",
+    "channel1": "3389737",
+    "channel2": "3394344",
+    "channel3": "3394347"
+  },
+  "timing": {
+    "sensorPeriodMs": 20000,
+    "mqttSpacingMs": 1200,
+    "timeSyncIntervalMs": 3600000
+  }
+}
