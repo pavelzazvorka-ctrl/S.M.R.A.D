@@ -531,8 +531,6 @@ cela aplikace se restartuje.
     PSRAM: OPI PSRAM
     Flash Size 4M (32M)
 
-![smrad](/images/Testing.png)
-
 ## Kalibrace
 
 Kalibrace je ulozena v calibration.json souboru a vypada napriklad takhle:
