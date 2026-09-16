@@ -2,6 +2,8 @@
 
 ![smrad](/images/smrad.png)
 
+( AI translation just to give an overview to non CZ based visitors )
+
 SMRAD is an autonomous multi-channel environmental and gas logger based on the ESP32-S3 and FreeRTOS. The firmware is designed for long-term unattended operation.
 
 ### Main goals:
